@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">Aftensmadsvælger 🍽️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+    // Bootstrap theme + lang BEFORE body renders to avoid flash
+    (function() {
+        try {
+            var savedTheme = localStorage.getItem('theme');
+            var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        } catch(e) {}
+        try {
+            var savedLang = localStorage.getItem('lang');
+            var lang = savedLang || (navigator.language && navigator.language.toLowerCase().startsWith('en') ? 'en' : 'da');
+            document.documentElement.setAttribute('data-lang', lang);
+            document.documentElement.setAttribute('lang', lang);
+        } catch(e) {}
+    })();
+    </script>
+</head>
+<body class="app-body min-h-screen">
+
+    <!-- === HEADER === -->
+    <div class="header-gradient text-white shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <div id="header-top" class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-10">
+
+                <!-- Venstre: Logo + Titel -->
+                <div id="header-brand" class="flex items-center gap-4 min-w-0 flex-shrink-0">
+                    <div
+                        id="logo-emoji"
+                        onclick="handleLogoClick()"
+                        class="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center text-4xl cursor-pointer hover:scale-110 active:scale-95 flex-shrink-0"
+                        data-i18n-title="logoTitle" title="Dobbeltklik for global random"
+                    >
+                        🍽️
+                    </div>
+                    <div class="min-w-0">
+                        <h1 data-i18n="heading" class="text-3xl sm:text-4xl font-semibold tracking-tight leading-none">Aftensmadsvælger</h1>
+                        <p data-i18n="subheading" class="text-emerald-100 text-sm sm:text-base mt-1">Hvad skal vi spise i aften?</p>
+                    </div>
+                </div>
+
+                <!-- Højre side: User-bar + knapper -->
+                <div id="header-controls" class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto lg:flex-1 lg:justify-end">
+
+                    <div id="user-bar" class="hidden items-center gap-3 bg-white/15 backdrop-blur-md rounded-3xl px-5 py-2.5 flex-shrink-0">
+                        <span id="user-email" class="text-sm font-medium truncate max-w-[200px]"></span>
+                        <button
+                            type="button"
+                            onclick="signOutUser()"
+                            class="bg-white text-emerald-700 hover:bg-amber-100 px-5 py-1.5 rounded-2xl font-semibold active:scale-95 whitespace-nowrap text-sm"
+                            data-i18n="signOut">
+                            Log ud
+                        </button>
+                    </div>
+
+                    <div id="header-actions" class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                        <button
+                            type="button"
+                            id="theme-toggle-btn"
+                            onclick="toggleTheme()"
+                            data-i18n-aria="themeAria"
+                            data-i18n-title="themeTitle"
+                            aria-label="Skift tema"
+                            title="Skift mellem lyst og mørkt tema"
+                            class="header-icon-btn flex-shrink-0 inline-flex items-center justify-center bg-white/20 hover:bg-white/30 text-white w-12 h-12 rounded-3xl text-2xl font-semibold shadow-2xl active:scale-95"
+                        >
+                            <span id="theme-toggle-icon">🌙</span>
+                        </button>
+                        <button
+                            type="button"
+                            id="lang-toggle-btn"
+                            onclick="toggleLang()"
+                            data-i18n-aria="langAria"
+                            data-i18n-title="langTitle"
+                            aria-label="Skift sprog"
+                            title="Skift sprog"
+                            class="header-icon-btn flex-shrink-0 inline-flex items-center justify-center bg-white/20 hover:bg-white/30 text-white w-12 h-12 rounded-3xl text-2xl font-semibold shadow-2xl active:scale-95"
+                        >
+                            <span id="lang-toggle-icon">🇬🇧</span>
+                        </button>
+                        <button
+                            type="button"
+                            id="history-toggle-btn"
+                            onclick="showHistoryModal()"
+                            data-i18n-aria="historyAria"
+                            data-i18n-title="historyTitle"
+                            aria-label="Historik"
+                            title="Historik"
+                            class="header-icon-btn flex-shrink-0 inline-flex items-center justify-center bg-white/20 hover:bg-white/30 text-white w-12 h-12 rounded-3xl text-2xl font-semibold shadow-2xl active:scale-95"
+                        >
+                            <span>🕘</span>
+                        </button>
+                        <button
+                            type="button"
+                            onclick="globalQuickPick()"
+                            data-i18n-title="globalRandomTitle"
+                            class="header-main-btn flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 h-12 rounded-3xl text-base font-semibold shadow-2xl active:scale-95 whitespace-nowrap"
+                            title="Vælg en tilfældig ret fra alle kategorier"
+                        >
+                            <span class="text-2xl">✨</span><span data-i18n="globalRandom">Bare vælg</span>
+                        </button>
+                        <button
+                            type="button"
+                            onclick="showAddCategoryModal()"
+                            class="header-main-btn flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-white text-emerald-700 hover:bg-amber-100 px-6 h-12 rounded-3xl text-base font-semibold shadow-2xl active:scale-95 whitespace-nowrap"
+                        >
+                            <span class="text-2xl">+</span><span data-i18n="addCategory">Tilføj kategori</span>
+                        </button>
+                        <button
+                            type="button"
+                            onclick="showGlobalTagsModal()"
+                            class="header-main-btn flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-800 px-6 h-12 rounded-3xl text-base font-semibold shadow-2xl active:scale-95 whitespace-nowrap"
+                        >
+                            <span class="text-2xl">🏷️</span><span data-i18n="addTags">Tilføj tags</span>
+                        </button>
+                        <button
+                            type="button"
+                            onclick="showTagRandomModal()"
+                            class="header-main-btn flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 h-12 rounded-3xl text-base font-semibold shadow-2xl active:scale-95 whitespace-nowrap"
+                        >
+                            <span class="text-2xl">🎲</span><span data-i18n="randomByTags">Random efter tags</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-12">
+        <section id="empty-state" class="flex flex-col items-center justify-center py-16 sm:py-24 px-2 text-center">
+            <div class="text-8xl sm:text-9xl mb-6">🍲</div>
+            <h2 data-i18n="emptyHeading" class="text-2xl sm:text-3xl font-semibold text-slate-700 mb-3">Ingen kategorier endnu</h2>
+            <p data-i18n="emptyText" class="text-slate-500 max-w-md text-sm sm:text-base">Tryk på “Tilføj kategori” for at komme i gang.</p>
+        </section>
+        <section id="categories-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-8"></section>
+    </main>
+
+    <div id="add-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-50 flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this) hideAddModal()">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 sm:p-8 modal shadow-2xl max-h-[92vh] overflow-y-auto">
+            <h2 data-i18n="newCategory" class="text-2xl sm:text-3xl font-semibold mb-6">Ny kategori</h2>
+            <input
+                id="category-name-input"
+                type="text"
+                placeholder="f.eks. Italiensk" data-i18n-placeholder="categoryPlaceholder"
+                class="w-full h-14 px-6 rounded-3xl border border-slate-300 focus:border-emerald-500 outline-none text-lg"
+                autocomplete="new-password"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                spellcheck="false"
+                autocapitalize="off"
+            >
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8">
+                <button type="button" onclick="hideAddModal()" class="w-full flex-1 h-14 rounded-3xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50" data-i18n="cancel">
+                    Annuller
+                </button>
+                <button type="button" onclick="createEmptyCategory()" class="w-full flex-1 h-14 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold" data-i18n="createCategory">
+                    Opret kategori
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detail-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-50 flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this) closeDetailModal()">
+        <div class="bg-white rounded-3xl w-full max-w-3xl overflow-hidden modal flex flex-col max-h-[92vh] shadow-2xl">
+            <div class="px-4 sm:px-8 pt-5 sm:pt-6 pb-4 border-b flex items-center justify-between flex-shrink-0 gap-3">
+                <h2 id="modal-category-name" class="text-2xl sm:text-3xl font-semibold min-w-0 break-words"></h2>
+                <button type="button" onclick="closeDetailModal()" class="text-4xl leading-none text-slate-400 hover:text-slate-600 flex-shrink-0">×</button>
+            </div>
+            <div id="meal-list" class="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8 space-y-4"></div>
+            <div class="border-t px-4 sm:px-8 py-6 sm:py-8 bg-white flex flex-col gap-4 flex-shrink-0">
+                <div id="edit-state-banner" class="hidden px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <span id="edit-state-text" class="font-medium">Redigerer</span>
+                    <button type="button" onclick="cancelMealEdit()" class="text-sm font-semibold text-amber-700 hover:text-amber-900 text-left sm:text-right" data-i18n="cancelEdit">
+                        Annuller redigering
+                    </button>
+                </div>
+                <input
+                    id="new-meal-input"
+                    type="text"
+                    placeholder="Navn på måltid" data-i18n-placeholder="mealPlaceholder"
+                    class="h-14 px-5 rounded-3xl border border-slate-300 focus:border-emerald-500 outline-none text-lg w-full"
+                    autocomplete="new-password"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    spellcheck="false"
+                    autocapitalize="off"
+                >
+                <button type="button" onclick="showMealTagsPopup()" class="h-12 w-full bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-3xl font-medium flex items-center justify-center gap-2" data-i18n="addEditTags">
+                    🏷️ Tilføj / rediger tags
+                </button>
+                <button id="meal-submit-button" type="button" onclick="addMealToCurrentCategory()" class="h-12 w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl font-semibold" data-i18n="addSaveMeal">
+                    + Tilføj / gem måltid
+                </button>
+            </div>
+            <div class="border-t px-4 sm:px-8 py-5 bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-shrink-0">
+                <button type="button" onclick="deleteCurrentCategory()" class="w-full sm:w-auto text-red-600 hover:text-red-700 font-medium flex items-center justify-center sm:justify-start gap-2" data-i18n="deleteCategory">
+                    🗑️ Slet kategori
+                </button>
+                <button type="button" onclick="closeDetailModal()" class="w-full sm:w-auto px-8 h-11 bg-white hover:bg-slate-100 border border-slate-200 rounded-3xl font-medium" data-i18n="close">
+                    Luk
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="global-tags-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-[60] flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this) hideGlobalTagsModal()">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 sm:p-8 modal shadow-2xl max-h-[92vh] overflow-y-auto">
+            <h2 data-i18n="manageTags" class="text-2xl font-semibold mb-6">Administrer tags</h2>
+            <div id="global-tags-list" class="flex flex-wrap gap-3 mb-6 min-h-[140px]"></div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input
+                    id="new-global-tag-input"
+                    type="text"
+                    placeholder="Nyt tag..." data-i18n-placeholder="newTagPlaceholder"
+                    class="w-full flex-1 h-12 px-5 rounded-3xl border border-slate-300 focus:border-emerald-500 outline-none"
+                    autocomplete="new-password"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    spellcheck="false"
+                    autocapitalize="off"
+                >
+                <button type="button" onclick="addGlobalTag()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 h-12 rounded-3xl font-medium" data-i18n="create">
+                    Opret
+                </button>
+            </div>
+            <button type="button" onclick="hideGlobalTagsModal()" class="w-full mt-8 h-12 rounded-3xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50" data-i18n="close">
+                Luk
+            </button>
+        </div>
+    </div>
+
+    <div id="meal-tags-popup" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-[70] flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this) hideMealTagsPopup()">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 sm:p-8 modal shadow-2xl max-h-[92vh] overflow-y-auto">
+            <h2 data-i18n="chooseMealTags" class="text-2xl font-semibold mb-6">Vælg tags til måltidet</h2>
+            <div id="meal-tags-list" class="flex flex-wrap gap-3 mb-8 min-h-[160px]"></div>
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <button type="button" onclick="hideMealTagsPopup()" class="w-full flex-1 h-12 rounded-3xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50" data-i18n="cancel">
+                    Annuller
+                </button>
+                <button type="button" onclick="saveMealTags()" class="w-full flex-1 h-12 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold" data-i18n="saveTags">
+                    Gem tags
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tag-random-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-[80] flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this) hideTagRandomModal()">
+        <div class="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 modal shadow-2xl max-h-[92vh] overflow-y-auto">
+            <h2 data-i18n="chooseRandomTags" class="text-2xl font-semibold mb-3">Vælg tags til random</h2>
+            <p data-i18n="chooseRandomDesc" class="text-slate-500 mb-6">Marker de tags du vil filtrere efter.</p>
+            <div id="tag-random-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8 min-h-[160px]"></div>
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <button type="button" onclick="hideTagRandomModal()" class="w-full flex-1 h-12 rounded-3xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50" data-i18n="cancel">
+                    Annuller
+                </button>
+                <button type="button" onclick="performTagRandom()" class="w-full flex-1 h-12 rounded-3xl bg-amber-500 hover:bg-amber-600 text-white font-semibold" data-i18n="findMeal">
+                    Find måltid
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chosen-display" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xl z-[90] flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this) hideChosenModal()">
+        <div class="bg-white rounded-3xl w-full max-w-md modal overflow-hidden shadow-2xl">
+            <div class="p-6 sm:p-8 text-center">
+                <div id="spinner-container" class="py-10">
+                    <div class="spinner text-7xl mb-4">🎲</div>
+                    <p data-i18n="searching" class="text-slate-500">Leder efter noget lækkert…</p>
+                </div>
+                <div id="result-container" class="hidden">
+                    <div id="meal-emoji" class="text-8xl mb-4"></div>
+                    <div id="chosen-category-badge" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 font-medium mb-4"></div>
+                    <h2 id="chosen-meal-name" class="text-3xl font-semibold text-slate-900 mb-5"></h2>
+                    <div id="chosen-tags" class="flex flex-wrap justify-center gap-2 mb-8"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button type="button" onclick="rerollSameCategory()" class="h-12 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl font-medium" data-i18n="chooseAgain">
+                            Vælg igen
+                        </button>
+                        <button type="button" onclick="hideChosenModal()" class="h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl font-semibold" data-i18n="close">
+                            Luk
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="history-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-[85] flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this) hideHistoryModal()">
+        <div class="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 modal shadow-2xl max-h-[85vh] flex flex-col">
+            <h2 data-i18n="historyTitle" class="text-2xl font-semibold mb-2">Historik</h2>
+            <p data-i18n="historyDesc" class="text-slate-500 mb-5">De sidste 10 valgte retter.</p>
+            <div id="history-list" class="flex-1 overflow-y-auto -mx-2 px-2 space-y-3 min-h-[120px]"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+                <button type="button" onclick="clearHistory()" class="h-12 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl font-medium" data-i18n="clearHistory">Ryd historik</button>
+                <button type="button" onclick="hideHistoryModal()" class="h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl font-semibold" data-i18n="close">Luk</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-xl z-[100] flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 sm:p-8 modal shadow-2xl max-h-[92vh] overflow-y-auto">
+            <h2 data-i18n="signIn" class="text-2xl font-semibold mb-2 text-center">Log ind</h2>
+            <p data-i18n="signInDesc" class="text-slate-500 text-center mb-6">Brug email og kodeord for at komme ind.</p>
+            <div class="space-y-4">
+                <input
+                    id="auth-email-input"
+                    type="email"
+                    placeholder="Email" data-i18n-placeholder="email"
+                    class="w-full h-14 px-6 rounded-3xl border border-slate-300 focus:border-emerald-500 outline-none text-lg"
+                    autocomplete="email"
+                    spellcheck="false"
+                    autocapitalize="off"
+                >
+                <input
+                    id="auth-password-input"
+                    type="password"
+                    placeholder="Kodeord" data-i18n-placeholder="password"
+                    class="w-full h-14 px-6 rounded-3xl border border-slate-300 focus:border-emerald-500 outline-none text-lg"
+                    autocomplete="current-password"
+                    spellcheck="false"
+                    autocapitalize="off"
+                >
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+                <button
+                    type="button"
+                    onclick="signInUser()"
+                    class="h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl font-semibold" data-i18n="signIn"
+                >
+                    Log ind
+                </button>
+                <button
+                    type="button"
+                    onclick="signUpUser()"
+                    class="h-14 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl font-semibold" data-i18n="signUp"
+                >
+                    Opret bruger
+                </button>
+            </div>
+            <p data-i18n="authNote" class="text-slate-400 text-sm text-center mt-5">
+                Hvis du opretter en ny bruger, kan du blive bedt om at bekræfte emailen, afhængigt af dine Supabase-indstillinger.
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
