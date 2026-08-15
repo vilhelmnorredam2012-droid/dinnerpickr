@@ -10,22 +10,6 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body { font-family: "Inter", sans-serif; }
 h1, h2, h3 { font-family: "Space Grotesk", sans-serif; }
 
-/* ===== FJERN GRIM FIRKANT – kun pæn fokusring ved tastatur ===== */
-button:focus,
-input:focus,
-[role="button"]:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
-button:focus-visible,
-input:focus-visible,
-[role="button"]:focus-visible {
-    outline: 2px solid #10b981 !important;
-    outline-offset: 2px !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
-}
-
 button {
     transition: transform 0.18s ease, background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     touch-action: manipulation;
@@ -1011,14 +995,20 @@ html[data-theme="dark"] button.bg-white {
    FINAL POLISH — STABLE BUTTONS / NO HOVER FLICKER
    ============================================================ */
 
+/* 
+   ÆNDRING: Fjernede de grimme firkanter omkring "rene" knapper 
+   (som ✏️, ✕, 🗑️, Luk, osv.) ved at sætte border-color: transparent 
+   som standard. Knapper der SKAL have synlig border (med eksplicitte 
+   Tailwind-klasser som border-slate-300, eller med baggrundsfarve) 
+   beholder den stadig via deres specifikke regler.
+*/
 button,
 [role="button"] {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     transform: translateZ(0);
     will-change: transform;
-    border-width: 1px;
-    border-style: solid;
+    border: 1px solid transparent;
     transition:
         transform 140ms ease,
         box-shadow 140ms ease,
@@ -1036,6 +1026,14 @@ button:hover,
 button:active,
 [role="button"]:active {
     transform: translateY(0) scale(0.985) translateZ(0);
+}
+
+button:focus-visible,
+[role="button"]:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 3px rgba(16, 185, 129, 0.18),
+        0 10px 24px rgba(15, 23, 42, 0.12);
 }
 
 #theme-toggle-btn,
