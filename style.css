@@ -10,19 +10,20 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body { font-family: "Inter", sans-serif; }
 h1, h2, h3 { font-family: "Space Grotesk", sans-serif; }
 
-/* ===== Fjern grimme firkanter omkring knapper ===== */
-button,
-[role="button"],
-input[type="button"],
-input[type="submit"],
-input[type="reset"] {
+/* ===== FJERN GRIM FIRKANT – kun pæn fokusring ved tastatur ===== */
+button:focus,
+input:focus,
+[role="button"]:focus {
     outline: none !important;
+    box-shadow: none !important;
 }
 button:focus-visible,
+input:focus-visible,
 [role="button"]:focus-visible {
     outline: 2px solid #10b981 !important;
     outline-offset: 2px !important;
     border-radius: 9999px !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
 }
 
 button {
@@ -1035,11 +1036,6 @@ button:hover,
 button:active,
 [role="button"]:active {
     transform: translateY(0) scale(0.985) translateZ(0);
-}
-
-button:focus-visible,
-[role="button"]:focus-visible {
-    outline: none; /* override default */
 }
 
 #theme-toggle-btn,
